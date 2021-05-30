@@ -2,6 +2,9 @@
   "name": "dnsauth",
   "version": "1.0.0",
   "description": "Authentication for signing up on DNS blockchain",
+  "engines": {
+    "node": "14.x"
+  },
   "main": "app.js",
   "scripts": {
     "dev": "nodemon app.js"
