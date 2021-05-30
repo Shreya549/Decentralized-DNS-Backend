@@ -6,14 +6,13 @@ module.exports = (req, res, next) => {
       message: "Access Denied! No token entered.",
     });
 
-  const token = req.headers.authorization.split(" ")[1];
-
   try {
+    const token = req.headers.authorization.split(" ")[1];
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     req.user = verified;
     next();
   } catch (err) {
-    res.status(401).json({
+    return res.status(401).json({
       message: "Auth failed!",
     });
   }
