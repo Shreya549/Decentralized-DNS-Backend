@@ -10,12 +10,12 @@ const Web3 = require("web3");
 const web3 = new Web3(process.env.TESTNET_URL);
 
 const signup = async (req, res) => {
-    const { name, email, password} = req.body;
+  const { name, email, password } = req.body;
 
-    let newAccount = await web3.eth.accounts.create();
-    
-    let accountAddress = newAccount.address;
-    let secretKey = newAccount.privateKey;
+  let newAccount = await web3.eth.accounts.create();
+
+  let accountAddress = newAccount.address;
+  let secretKey = newAccount.privateKey;
 
   if (!name || !email || !password) {
     return res.status(400).json({
@@ -49,7 +49,7 @@ const signup = async (req, res) => {
                 userId: result._id,
                 email: result.email,
                 name: result.name,
-                accountAddress: result.accountAddress
+                accountAddress: result.accountAddress,
               },
               process.env.JWT_SECRET,
               {
@@ -63,7 +63,7 @@ const signup = async (req, res) => {
                 _id: result._id,
                 name: result.name,
                 email: result.email,
-                accountAddress: result.accountAddress
+                accountAddress: result.accountAddress,
               },
               token,
             });
@@ -110,7 +110,7 @@ const login = async (req, res) => {
                 userId: user[0]._id,
                 email: user[0].email,
                 name: user[0].name,
-                accountAddress: user[0].accountAddress
+                accountAddress: user[0].accountAddress,
               },
               process.env.JWT_SECRET,
               {
@@ -122,7 +122,7 @@ const login = async (req, res) => {
                 _id: user[0]._id,
                 name: user[0].name,
                 email: user[0].email,
-                accountAddress: user[0].accountAddress
+                accountAddress: user[0].accountAddress,
               },
               token,
             });
@@ -146,8 +146,34 @@ const login = async (req, res) => {
     });
 };
 
+const getBalance = async (req, res) => {
+  await User.findById(req.user.userId)
+    .then(async (user) => {
+      const acAddress = user.accountAddress;
+      await web3.eth
+        .getBalance(acAddress)
+        .then(async (balance) => {
+          res.status(200).json({
+            balance,
+            units: "wei",
+          });
+        })
+        .catch((err) => {
+          console.log(err.toString());
+          return res.status(500).json({
+            message: "Something went wrong",
+          });
+        });
+    })
+    .catch((err) => {
+      return res.status(500).json({
+        message: "Wallet Address Not Found",
+      });
+    });
+};
+
 module.exports = {
   signup,
   login,
+  getBalance,
 };
-

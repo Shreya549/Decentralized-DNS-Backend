@@ -11,4 +11,7 @@ router.post("/signup", userControllers.signup);
 //User login
 router.post("/login", userControllers.login);
 
+//Check user balance
+router.get("/checkBalance", checkAuth, userControllers.getBalance);
+
 module.exports = router;
