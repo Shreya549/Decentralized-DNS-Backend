@@ -5,10 +5,10 @@ const checkAuth = require("../middleware/checkAuth");
 
 const router = express.Router();
 
-//User signup
+//Check Reservation Time
 router.post("/checkTime", checkAuth, domainControllers.checkReservationTime);
 
-//User login
-// router.post("/login", domainControllers.login);
+//Reserve Domain
+router.post("/reserve", checkAuth, domainControllers.reserveDomain);
 
 module.exports = router;
