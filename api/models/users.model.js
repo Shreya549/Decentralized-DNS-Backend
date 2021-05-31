@@ -7,6 +7,7 @@ const userSchema = mongoose.Schema({
   password: { type: String },
   accountAddress: { type: String },
   secretKey: { type: String },
+  domainNames: [{ type: String }],
 });
 
 module.exports = mongoose.model("User", userSchema);

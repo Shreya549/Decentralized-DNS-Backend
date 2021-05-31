@@ -14,4 +14,20 @@ router.post("/reserve", checkAuth, domainControllers.reserveDomain);
 //isDomainNameReserved
 router.post("/isReserved", checkAuth, domainControllers.isDomainNameReserved);
 
+//isDomainNameReservedByMe
+router.post(
+  "/isReservedByMe",
+  checkAuth,
+  domainControllers.isDomainNameReservedByMe
+);
+
+//extendDomainNameReservation
+router.post(
+  "/extend",
+  checkAuth,
+  domainControllers.extendDomainNameReservation
+);
+
+
+
 module.exports = router;
