@@ -77,8 +77,13 @@ app.use((error, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 
 //Start the server
-app.listen(PORT, () => {
+
+const server = app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
 });
 
+server.setTimeout(500000);
+
 module.exports = app;
+
+

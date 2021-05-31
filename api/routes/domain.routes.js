@@ -11,4 +11,7 @@ router.post("/checkTime", checkAuth, domainControllers.checkReservationTime);
 //Reserve Domain
 router.post("/reserve", checkAuth, domainControllers.reserveDomain);
 
+//isDomainNameReserved
+router.post("/isReserved", checkAuth, domainControllers.isDomainNameReserved);
+
 module.exports = router;

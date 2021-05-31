@@ -145,17 +145,78 @@ const reserveDomain = async (req, res) => {
           });
       });
     })
-      .catch((err) => {
-        console.log(err)
+    .catch((err) => {
+      console.log(err);
       return res.status(500).json({
-          message: "Wallet Address Not Found",
-          error: err.toString(),
-          err
+        message: "Wallet Address Not Found",
+        error: err.toString(),
+        err,
       });
     });
+};
+
+const isDomainNameReserved = async (req, res) => {
+  const { domainName } = req.body;
+
+  if (!domainName) {
+    return res.status(400).json({
+      message: "Domain name missing from req.body",
+    });
+  }
+
+  const user = await User.findById(req.user.userId);
+  if (!user) {
+    return res.status(500).json({
+      message: "Wallet Address Not Found",
+    });
+  }
+
+  const acAddress = user.accountAddress;
+  const secretKey = Buffer.from(user.secretKey.substring(2, 66), "hex");
+
+  const contractMethod = contract.methods.isDomainNameReserved(domainName);
+
+  web3.eth.getTransactionCount(acAddress, (err, txCount) => {
+    //Create the transaction object
+    const txObject = {
+      from: acAddress,
+      to: contractAddress,
+      nonce: web3.utils.toHex(txCount),
+      gasLimit: web3.utils.toHex(6000000),
+      gasPrice: web3.utils.toHex(web3.utils.toWei("10", "gwei")),
+      data: contractMethod.encodeABI(),
+    };
+
+    //Sign the transaction
+    const tx = new Tx(txObject, { chain: "ropsten" });
+    tx.sign(secretKey);
+
+    const serializedTx = tx.serialize();
+    const raw = "0x" + serializedTx.toString("hex");
+
+    //Broadcast the transaction
+    web3.eth
+      .sendSignedTransaction(raw)
+      .then(async (txHash) => {
+        console.log(txHash);
+        console.log("TxHash:", txHash.transactionHash);
+        res.status(200).json({
+          isReserved: web3.utils.hexToNumber(txHash.logs[0].data),
+          TransactionHash: txHash.transactionHash,
+          TransactionReceipt: txHash,
+        });
+      })
+      .catch((err) => {
+        console.log(err.toString());
+        return res.status(500).json({
+          message: "Something went wrong",
+        });
+      });
+  });
 };
 
 module.exports = {
   checkReservationTime,
   reserveDomain,
+  isDomainNameReserved,
 };
