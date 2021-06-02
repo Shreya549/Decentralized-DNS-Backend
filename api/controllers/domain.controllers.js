@@ -16,7 +16,7 @@ const contract = new web3.eth.Contract(contractABI, contractAddress);
 
 const checkReservationTime = async (req, res) => {
   const { domainName, domainValue } = req.body;
-
+    console.log(req.body);
   if (!domainName || !domainValue) {
     return res.status(400).json({
       message: "1 or more parameter(s) missing from req.body",
@@ -75,7 +75,8 @@ const checkReservationTime = async (req, res) => {
           });
       });
     })
-    .catch((err) => {
+      .catch((err) => {
+        
       return res.status(500).json({
         message: "Wallet Address Not Found",
       });

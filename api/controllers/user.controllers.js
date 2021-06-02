@@ -3,11 +3,13 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const axios = require("axios");
 
 const User = require("../models/users.model");
 
 const Web3 = require("web3");
 const web3 = new Web3(process.env.TESTNET_URL);
+const startBlockNumber = process.env.INITIAL_BLOCK;
 
 const signup = async (req, res) => {
   const { name, email, password } = req.body;
@@ -146,17 +148,47 @@ const login = async (req, res) => {
     });
 };
 
-const getBalance = async (req, res) => {
+const getDetails = async (req, res) => {
   await User.findById(req.user.userId)
     .then(async (user) => {
       const acAddress = user.accountAddress;
       await web3.eth
         .getBalance(acAddress)
         .then(async (balance) => {
-          res.status(200).json({
-            balance,
-            units: "wei",
-          });
+          const blockNumber = await web3.eth.getBlockNumber();
+          if (!blockNumber) {
+            return res.status(500).json({
+              balance,
+              units: "wei",
+              blockNumber: "Not found",
+            });
+          }
+
+          let config = {
+            method: "get",
+            url: `https://api-ropsten.etherscan.io/api?module=account&action=txlist&address=${acAddress}&startblock=${startBlockNumber}&endblock=${blockNumber}&sort=des&apikey=${process.env.ETHERSCAN_APIKEY}`,
+            headers: {},
+          };
+
+          axios(config)
+            .then(function (response) {
+              res.status(200).json({
+                balance,
+                units: "wei",
+                blockNumber,
+                txList: response.data,
+              });
+            })
+            .catch(function (error) {
+              console.log(error.toString());
+              return res.status(500).json({
+                message: "Something went wrong",
+                balance,
+                units: "wei",
+                blockNumber,
+                txList: "Not found",
+              });
+            });
         })
         .catch((err) => {
           console.log(err.toString());
@@ -172,8 +204,9 @@ const getBalance = async (req, res) => {
     });
 };
 
+
 module.exports = {
   signup,
   login,
-  getBalance,
+  getDetails,
 };
