@@ -152,6 +152,10 @@ const getDetails = async (req, res) => {
   await User.findById(req.user.userId)
     .then(async (user) => {
       const acAddress = user.accountAddress;
+      const { domainNames } = user;
+      const numOfDomains = domainNames.length;
+      console.log(domainNames);
+
       await web3.eth
         .getBalance(acAddress)
         .then(async (balance) => {
@@ -160,22 +164,26 @@ const getDetails = async (req, res) => {
             return res.status(500).json({
               balance,
               units: "wei",
+              domainNames,
+              numOfDomains,
               blockNumber: "Not found",
             });
           }
 
           let config = {
             method: "get",
-            url: `https://api-ropsten.etherscan.io/api?module=account&action=txlist&address=${acAddress}&startblock=${startBlockNumber}&endblock=${blockNumber}&sort=des&apikey=${process.env.ETHERSCAN_APIKEY}`,
+            url: `https://api-ropsten.etherscan.io/api?module=account&action=txlist&address=${acAddress}&startblock=${startBlockNumber}&endblock=${blockNumber}&sort=desc&apikey=${process.env.ETHERSCAN_APIKEY}`,
             headers: {},
           };
 
           await axios(config)
-              .then(function (response) {
+            .then(function (response) {
               res.status(200).json({
                 balance,
                 units: "wei",
                 blockNumber,
+                domainNames,
+                numOfDomains,
                 txList: response.data,
               });
             })

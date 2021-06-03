@@ -374,6 +374,7 @@ const releaseDomain = async (req, res) => {
   await User.findById(req.user.userId)
     .then(async (user) => {
       const acAddress = user.accountAddress;
+
       const secretKey = Buffer.from(user.secretKey.substring(2, 66), "hex");
 
       const contractMethod = contract.methods.releaseDomainName(domainName);
@@ -404,11 +405,24 @@ const releaseDomain = async (req, res) => {
           .then(async (txHash) => {
             console.log("TxHash:", txHash.transactionHash);
             console.log(txHash);
-
-            res.status(200).json({
-              TransactionHash: txHash.transactionHash,
-              TransactionReceipt: txHash,
-            });
+            await User.updateOne(
+              { _id: req.user.userId },
+              {
+                $pull: { domainNames: domainName },
+              }
+            )
+              .then(() => {
+                res.status(200).json({
+                  TransactionHash: txHash.transactionHash,
+                  TransactionReceipt: txHash,
+                });
+              })
+              .catch((err) => {
+                console.log(err.toString());
+                return res.status(500).json({
+                  message: "Something went wrong",
+                });
+              });
           })
           .catch((err) => {
             console.log(err.toString());
@@ -654,11 +668,11 @@ const getDomainAddress = async (req, res) => {
               ],
               txHash.logs[txHash.logs.length - 1].data,
               txHash.logs[txHash.logs.length - 1].topics
-              );
-              console.log(data)
+            );
+            console.log(data);
 
             res.status(200).json({
-              data : data['0'],
+              data: data["0"],
               TransactionHash: txHash.transactionHash,
               TransactionReceipt: txHash,
             });

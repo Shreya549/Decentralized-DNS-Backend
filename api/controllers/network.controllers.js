@@ -28,24 +28,41 @@ const getNetworkDetails = async (req, res) => {
 
     let config = {
       method: "get",
-      url: `https://api-ropsten.etherscan.io/api?module=account&action=txlist&address=${contractAddress}&startblock=${startBlockNumber}&endblock=${currBlock}&sort=des&apikey=${process.env.ETHERSCAN_APIKEY}`,
+      url: `https://api-ropsten.etherscan.io/api?module=account&action=txlist&address=${contractAddress}&startblock=${startBlockNumber}&endblock=${currBlock}&sort=desc&apikey=${process.env.ETHERSCAN_APIKEY}`,
       headers: {},
     };
 
     axios(config)
-      .then(function (response) {
-        res.status(200).json({
-          contractAddress,
-          hardFork,
-          chain,
-          txConfBlock,
-          avgGas,
-          initBlock: process.env.INITIAL_BLOCK,
-          currBlock,
-          nodeInfo,
-          txCount,
-          txList: response.data,
-        });
+      .then(async function (response) {
+        let totalDomains = 0;
+        await User.find({})
+          .then(async (users) => {
+            for (let user of users) {
+              totalDomains += user.domainNames.length;
+            }
+          })
+          .then(() => {
+            res.status(200).json({
+              totalDomains,
+              contractAddress,
+              hardFork,
+              chain,
+              txConfBlock,
+              avgGas,
+              initBlock: process.env.INITIAL_BLOCK,
+              currBlock,
+              nodeInfo,
+              txCount,
+              txList: response.data,
+            });
+          })
+          .catch(function (error) {
+            console.log(error.toString());
+            return res.status(500).json({
+              error: error.toString(),
+              message: "Something went wrong",
+            });
+          });
       })
       .catch(function (error) {
         console.log(error.toString());
