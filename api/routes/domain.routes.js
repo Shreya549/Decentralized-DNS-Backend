@@ -28,6 +28,11 @@ router.post(
   domainControllers.extendDomainNameReservation
 );
 
+//release domain
+router.post("/release", checkAuth, domainControllers.releaseDomain);
+
+//pull deposit
+router.post("/pull", checkAuth, domainControllers.pullDeposit);
 
 
 module.exports = router;

@@ -170,8 +170,8 @@ const getDetails = async (req, res) => {
             headers: {},
           };
 
-          axios(config)
-            .then(function (response) {
+          await axios(config)
+              .then(function (response) {
               res.status(200).json({
                 balance,
                 units: "wei",
@@ -203,7 +203,6 @@ const getDetails = async (req, res) => {
       });
     });
 };
-
 
 module.exports = {
   signup,

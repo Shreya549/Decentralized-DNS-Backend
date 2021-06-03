@@ -16,7 +16,7 @@ const contract = new web3.eth.Contract(contractABI, contractAddress);
 
 const checkReservationTime = async (req, res) => {
   const { domainName, domainValue } = req.body;
-    console.log(req.body);
+  console.log(req.body);
   if (!domainName || !domainValue) {
     return res.status(400).json({
       message: "1 or more parameter(s) missing from req.body",
@@ -75,8 +75,7 @@ const checkReservationTime = async (req, res) => {
           });
       });
     })
-      .catch((err) => {
-        
+    .catch((err) => {
       return res.status(500).json({
         message: "Wallet Address Not Found",
       });
@@ -196,7 +195,7 @@ const isDomainNameReserved = async (req, res) => {
       to: contractAddress,
       nonce: web3.utils.toHex(txCount),
       gasLimit: web3.utils.toHex(6000000),
-      gasPrice: web3.utils.toHex(web3.utils.toWei("10", "gwei")),
+      gasPrice: web3.utils.toHex(web3.utils.toWei("100", "gwei")),
       data: contractMethod.encodeABI(),
     };
 
@@ -363,10 +362,135 @@ const extendDomainNameReservation = async (req, res) => {
     });
 };
 
+const releaseDomain = async (req, res) => {
+  const { domainName } = req.body;
+
+  if (!domainName) {
+    return res.status(400).json({
+      message: "domain name missing from req.body",
+    });
+  }
+
+  await User.findById(req.user.userId)
+    .then(async (user) => {
+      const acAddress = user.accountAddress;
+      const secretKey = Buffer.from(user.secretKey.substring(2, 66), "hex");
+
+      const contractMethod = contract.methods.releaseDomainName(domainName);
+
+      web3.eth.getTransactionCount(acAddress, async (err, txCount) => {
+        //Create the transaction object
+        const txObject = {
+          from: acAddress,
+          to: contractAddress,
+          nonce: web3.utils.toHex(txCount),
+          gasLimit: web3.utils.toHex(6000000),
+          gasPrice: web3.utils.toHex(web3.utils.toWei("100", "gwei")),
+          data: contractMethod.encodeABI(),
+        };
+
+        // console.log(txObject)
+
+        //Sign the transaction
+        const tx = new Tx(txObject, { chain: "ropsten" });
+        tx.sign(secretKey);
+
+        const serializedTx = tx.serialize();
+        const raw = "0x" + serializedTx.toString("hex");
+
+        //Broadcast the transaction
+        await web3.eth
+          .sendSignedTransaction(raw)
+          .then(async (txHash) => {
+            console.log("TxHash:", txHash.transactionHash);
+            console.log(txHash);
+
+            res.status(200).json({
+              TransactionHash: txHash.transactionHash,
+              TransactionReceipt: txHash,
+            });
+          })
+          .catch((err) => {
+            console.log(err.toString());
+            return res.status(500).json({
+              message: "Something went wrong",
+            });
+          });
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+      return res.status(500).json({
+        message: "Wallet Address Not Found",
+        error: err.toString(),
+        err,
+      });
+    });
+};
+
+const pullDeposit = async (req, res) => {
+  await User.findById(req.user.userId)
+    .then(async (user) => {
+      const acAddress = user.accountAddress;
+      const secretKey = Buffer.from(user.secretKey.substring(2, 66), "hex");
+
+      const contractMethod = contract.methods.pullDeposit();
+
+      web3.eth.getTransactionCount(acAddress, async (err, txCount) => {
+        //Create the transaction object
+        const txObject = {
+          from: acAddress,
+          to: contractAddress,
+          nonce: web3.utils.toHex(txCount),
+          gasLimit: web3.utils.toHex(6000000),
+          gasPrice: web3.utils.toHex(web3.utils.toWei("100", "gwei")),
+          data: contractMethod.encodeABI(),
+        };
+
+        //Sign the transaction
+        const tx = new Tx(txObject, { chain: "ropsten" });
+        tx.sign(secretKey);
+
+        const serializedTx = tx.serialize();
+        const raw = "0x" + serializedTx.toString("hex");
+
+        //Broadcast the transaction
+        await web3.eth
+          .sendSignedTransaction(raw)
+          .then(async (txHash) => {
+            console.log("TxHash:", txHash.transactionHash);
+            console.log(txHash);
+
+            res.status(200).json({
+              returned: web3.utils.hexToNumber(txHash.logs[0].data),
+              TransactionHash: txHash.transactionHash,
+              TransactionReceipt: txHash,
+            });
+          })
+          .catch((err) => {
+            console.log(err.toString());
+            return res.status(500).json({
+              message: "Something went wrong",
+            });
+          });
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+      return res.status(500).json({
+        message: "Wallet Address Not Found",
+        error: err.toString(),
+        err,
+      });
+    });
+};
+
 module.exports = {
   checkReservationTime,
   reserveDomain,
   isDomainNameReserved,
   isDomainNameReservedByMe,
   extendDomainNameReservation,
+  releaseDomain,
+  pullDeposit,
 };
