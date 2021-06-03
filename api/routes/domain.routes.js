@@ -34,5 +34,13 @@ router.post("/release", checkAuth, domainControllers.releaseDomain);
 //pull deposit
 router.post("/pull", checkAuth, domainControllers.pullDeposit);
 
+//set domain address
+router.post("/set", checkAuth, domainControllers.setDomainAddress);
+
+//set custom domain address
+router.post("/setCustom", checkAuth, domainControllers.setCustomDomainAddress);
+
+//get domain address
+router.get('/get', checkAuth, domainControllers.getDomainAddress);
 
 module.exports = router;
