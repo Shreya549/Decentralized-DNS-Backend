@@ -39,22 +39,21 @@ const getNetworkDetails = async (req, res) => {
           .then(async (users) => {
             for (let user of users) {
               totalDomains += user.domainNames.length;
-            }
-          })
-          .then(() => {
-            res.status(200).json({
-              totalDomains,
-              contractAddress,
-              hardFork,
-              chain,
-              txConfBlock,
-              avgGas,
-              initBlock: process.env.INITIAL_BLOCK,
-              currBlock,
-              nodeInfo,
-              txCount,
-              txList: response.data,
-            });
+              }
+              res.status(200).json({
+                totalUsers: users.length,
+                totalDomains,
+                contractAddress,
+                hardFork,
+                chain,
+                txConfBlock,
+                avgGas,
+                initBlock: process.env.INITIAL_BLOCK,
+                currBlock,
+                nodeInfo,
+                txCount,
+                txList: response.data,
+              });
           })
           .catch(function (error) {
             console.log(error.toString());

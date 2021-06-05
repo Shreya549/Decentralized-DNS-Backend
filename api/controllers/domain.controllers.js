@@ -562,7 +562,14 @@ const setDomainAddress = async (req, res) => {
 };
 
 const setCustomDomainAddress = async (req, res) => {
+  console.log("hi");
   const { domainName, domainAlias } = req.body;
+  console.log(req.body);
+  if (!domainName || !domainAlias) {
+    return res.status(400).json({
+      message: "missing from req.body",
+    });
+  }
 
   await User.findById(req.user.userId)
     .then(async (user) => {
@@ -625,7 +632,13 @@ const setCustomDomainAddress = async (req, res) => {
 
 const getDomainAddress = async (req, res) => {
   const { domainName } = req.body;
+  console.log(req.body);
   console.log(domainName);
+  if (!domainName) {
+    return res.status(400).json({
+      message: "1 or more parameter(s) missing from req.body",
+    });
+  }
 
   await User.findById(req.user.userId)
     .then(async (user) => {
@@ -658,24 +671,33 @@ const getDomainAddress = async (req, res) => {
           .then(async (txHash) => {
             console.log("TxHash:", txHash.transactionHash);
             console.log(txHash);
-            let data = web3.eth.abi.decodeLog(
-              [
-                {
-                  internalType: "string",
-                  name: "",
-                  type: "string",
-                },
-              ],
-              txHash.logs[txHash.logs.length - 1].data,
-              txHash.logs[txHash.logs.length - 1].topics
-            );
-            console.log(data);
 
-            res.status(200).json({
-              data: data["0"],
-              TransactionHash: txHash.transactionHash,
-              TransactionReceipt: txHash,
-            });
+            if (txHash.logs[txHash.logs.length - 1].data.length > 0) {
+              let data = web3.eth.abi.decodeLog(
+                [
+                  {
+                    internalType: "string",
+                    name: "",
+                    type: "string",
+                  },
+                ],
+                txHash.logs[txHash.logs.length - 1].data,
+                txHash.logs[txHash.logs.length - 1].topics
+              );
+              console.log(data);
+
+              res.status(200).json({
+                data: data["0"],
+                TransactionHash: txHash.transactionHash,
+                TransactionReceipt: txHash,
+              });
+            } else {
+              res.status(200).json({
+                data: null,
+                TransactionHash: txHash.transactionHash,
+                TransactionReceipt: txHash,
+              });
+            }
           })
           .catch((err) => {
             console.log(err.toString());

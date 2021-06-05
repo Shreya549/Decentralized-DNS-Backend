@@ -41,6 +41,6 @@ router.post("/set", checkAuth, domainControllers.setDomainAddress);
 router.post("/setCustom", checkAuth, domainControllers.setCustomDomainAddress);
 
 //get domain address
-router.get('/get', checkAuth, domainControllers.getDomainAddress);
+router.post('/get', checkAuth, domainControllers.getDomainAddress);
 
 module.exports = router;
